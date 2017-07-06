@@ -1,0 +1,14 @@
+{application, egpx,
+ [
+  {description, "An Erlang egpx library"},
+  {vsn, "1"},
+  {modules, [
+             egpx
+            ]},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.
