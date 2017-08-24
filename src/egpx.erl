@@ -2,17 +2,16 @@
 
 %% egpx: egpx library's entry point.
 
--export([my_func/0]).
+-export([read_file/2]).
 
 
 %% API
 
-my_func() ->
-    ok().
+read_file(GpxFile, XsdSchema) ->
+    {ok, Model} = erlsom:compile_xsd_file(XsdSchema), 
+    {ok, Xml} = file:read_file(GpxFile),
+    {ok, Result, _} = erlsom:scan(Xml, Model),
+    {ok, Result}.
 
-%% Internals
-
-ok() ->
-    ok.
 
 %% End of Module.
