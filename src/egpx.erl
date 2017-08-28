@@ -26,6 +26,9 @@ event_func(Event, Location, State) ->
 handle_event({startElement, _, _, _, _}, _, State) ->
     io:format("Start element detected~n"),
     State;
+handle_event({endElement, _, _, _}, _, State) ->
+    io:format("End element detected~n"),
+    State;
 handle_event(_, _, State) -> State.
 
 %% End of Module.
