@@ -23,7 +23,7 @@ read_file(GpxFile, XsdSchema) ->
 
 
 read_file2(GpxFile) ->
-    xmerl_sax_parser:file(GpxFile, [{event_fun, fun event_func/3}]).
+    xmerl_sax_parser:file(GpxFile, [{event_fun, fun event_func/3}, {event_state, #gpx{}}]).
 
 %% @doc Callback to use as an EventFun.
 event_func(Event, Location, State) ->
