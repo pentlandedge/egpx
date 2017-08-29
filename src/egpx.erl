@@ -44,8 +44,8 @@ handle_event({startElement, _, "trkpt" = LocalName, _, Attr}, _, #state{nest = [
     add_nest(State, LocalName);
 handle_event({startElement, _, LocalName, _, _}, _, State) ->
     add_nest(State, LocalName);
-handle_event({endElement, _, _LocalName, _}, _, State) ->
-    reduce_nest(State);
+handle_event({endElement, _, LocalName, _}, _, State) ->
+    reduce_nest(State, LocalName);
 handle_event(_, _, State) -> State.
 
 %% @doc Deepen the nesting level in the state variable.
@@ -54,9 +54,11 @@ add_nest(State, LocalName) ->
     NewNest = [tag_to_atom(LocalName)|Nest],
     State#state{nest = NewNest}.
 
-%% @doc Reduce the nesting by one level.
-reduce_nest(#state{nest = Nest} = State) ->
-    [_|NewNest] = Nest,
+%% @doc Reduce the nesting by one level. Check for matching name pairs (where
+%% we recognised the tag, others are all mapped to undefined).
+reduce_nest(#state{nest = Nest} = State, LocalName) ->
+    Tag = tag_to_atom(LocalName),
+    [Tag|NewNest] = Nest,
     State#state{nest = NewNest}.
 
 %% @doc Map tags to atoms.
