@@ -2,7 +2,7 @@
 
 %% egpx: egpx library's entry point.
 
--export([read_file/2, read_file2/1, event_func/3]).
+-export([read_file/1, event_func/3]).
 
 
 -record(gpx, {metadata, trks}).
@@ -13,17 +13,15 @@
 
 -record(trkpt, {lat, lon, elev, time}).
 
+-record(state, {gpx, nest}).
+
 %% API
 
-read_file(GpxFile, XsdSchema) ->
-    {ok, Model} = erlsom:compile_xsd_file(XsdSchema), 
-    {ok, Xml} = file:read_file(GpxFile),
-    {ok, Result, _} = erlsom:scan(Xml, Model),
-    {ok, Result}.
-
-
-read_file2(GpxFile) ->
-    xmerl_sax_parser:file(GpxFile, [{event_fun, fun event_func/3}, {event_state, #gpx{}}]).
+%% @doc Use the built in SAX parser to scan the GPX file.
+read_file(GpxFile) ->
+    InitState = #state{gpx = #gpx{}, nest = []},
+    Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
+    xmerl_sax_parser:file(GpxFile, Options).
 
 %% @doc Callback to use as an EventFun.
 event_func(Event, Location, State) ->
