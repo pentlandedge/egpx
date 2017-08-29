@@ -24,7 +24,7 @@ read_file(GpxFile) ->
     InitState = #state{trackpoints = [], curr_trkpt = #trkpt{}, nest = []},
     Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
     case xmerl_sax_parser:file(GpxFile, Options) of 
-        {ok, #state{trackpoints = TrkPts} = State, _RestBin} ->
+        {ok, #state{trackpoints = TrkPts}, _RestBin} ->
             {ok, lists:reverse(TrkPts)};
         _ -> 
             error
@@ -47,7 +47,9 @@ handle_event({characters, Str}, _, #state{nest = [ele,trkpt,trkseg,trk,gpx]} = S
 
 handle_event({characters, Str}, _, #state{nest = [time,trkpt,trkseg,trk,gpx]} = State) ->
     io:format("Time string ~p~n", [Str]),
-    State;
+    TrkPt = State#state.curr_trkpt,
+    NewPt = TrkPt#trkpt{time = Str},
+    State#state{curr_trkpt = NewPt};
 
 handle_event({startElement, _, "trkpt" = LocalName, _, Attr},
              _, 
