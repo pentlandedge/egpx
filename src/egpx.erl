@@ -13,15 +13,22 @@
 
 -record(trkpt, {lat, lon, elev, time}).
 
--record(state, {gpx, nest}).
+%-record(state, {gpx, nest}).
+-record(state, {trackpoints, curr_trkpt, nest}).
 
 %% API
 
 %% @doc Use the built in SAX parser to scan the GPX file.
 read_file(GpxFile) ->
-    InitState = #state{gpx = #gpx{}, nest = []},
+    %InitState = #state{gpx = #gpx{}, nest = []},
+    InitState = #state{trackpoints = [], curr_trkpt = #trkpt{}, nest = []},
     Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
-    xmerl_sax_parser:file(GpxFile, Options).
+    case xmerl_sax_parser:file(GpxFile, Options) of 
+        {ok, #state{trackpoints = TrkPts} = State, _RestBin} ->
+            {ok, lists:reverse(TrkPts)};
+        _ -> 
+            error
+    end.
 
 %% @doc Callback to use as an EventFun.
 event_func(Event, Location, State) ->
@@ -38,12 +45,22 @@ handle_event({characters, Str}, _, #state{nest = [ele,trkpt,trkseg,trk,gpx]} = S
 handle_event({characters, Str}, _, #state{nest = [time,trkpt,trkseg,trk,gpx]} = State) ->
     io:format("Time string ~p~n", [Str]),
     State;
-handle_event({startElement, _, "trkpt" = LocalName, _, Attr}, _, #state{nest = [trkseg,trk,gpx]} = State) ->
+handle_event({startElement, _, "trkpt" = LocalName, _, Attr},
+             _, 
+             #state{nest = [trkseg,trk,gpx], curr_trkpt = TrkPt} = State) ->
     {Lat, Lon} = attributes_to_lat_lon(Attr), 
+    NewPt = TrkPt#trkpt{lat = Lat, lon = Lon},
+    NewState = State#state{curr_trkpt = NewPt},
     io:format("Lat ~p, Lon ~p~n", [Lat, Lon]),
-    add_nest(State, LocalName);
+    add_nest(NewState, LocalName);
 handle_event({startElement, _, LocalName, _, _}, _, State) ->
     add_nest(State, LocalName);
+handle_event({endElement, _, "trkpt", _}, _, State) ->
+    #state{trackpoints = TkPts, curr_trkpt = TrkPt} = State,
+    io:format("Finishing trackpoint~n"),
+    NewTkPts = [TrkPt|TkPts],
+    NewState = State#state{trackpoints = NewTkPts, curr_trkpt = #trkpt{}},
+    reduce_nest(NewState, "trkpt");
 handle_event({endElement, _, LocalName, _}, _, State) ->
     reduce_nest(State, LocalName);
 handle_event(_, _, State) -> State.
