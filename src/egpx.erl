@@ -41,10 +41,14 @@ event_func(Event, Location, State) ->
 handle_event({characters, Str}, _, #state{nest = [ele,trkpt,trkseg,trk,gpx]} = State) ->
     {Elevation, []} = string:to_float(Str),
     io:format("Elevation ~p~n", [Elevation]),
-    State;
+    TrkPt = State#state.curr_trkpt,
+    NewPt = TrkPt#trkpt{elev = Elevation},
+    State#state{curr_trkpt = NewPt};
+
 handle_event({characters, Str}, _, #state{nest = [time,trkpt,trkseg,trk,gpx]} = State) ->
     io:format("Time string ~p~n", [Str]),
     State;
+
 handle_event({startElement, _, "trkpt" = LocalName, _, Attr},
              _, 
              #state{nest = [trkseg,trk,gpx], curr_trkpt = TrkPt} = State) ->
@@ -53,16 +57,20 @@ handle_event({startElement, _, "trkpt" = LocalName, _, Attr},
     NewState = State#state{curr_trkpt = NewPt},
     io:format("Lat ~p, Lon ~p~n", [Lat, Lon]),
     add_nest(NewState, LocalName);
+
 handle_event({startElement, _, LocalName, _, _}, _, State) ->
     add_nest(State, LocalName);
+
 handle_event({endElement, _, "trkpt", _}, _, State) ->
     #state{trackpoints = TkPts, curr_trkpt = TrkPt} = State,
     io:format("Finishing trackpoint~n"),
     NewTkPts = [TrkPt|TkPts],
     NewState = State#state{trackpoints = NewTkPts, curr_trkpt = #trkpt{}},
     reduce_nest(NewState, "trkpt");
+
 handle_event({endElement, _, LocalName, _}, _, State) ->
     reduce_nest(State, LocalName);
+
 handle_event(_, _, State) -> State.
 
 %% @doc Deepen the nesting level in the state variable.
