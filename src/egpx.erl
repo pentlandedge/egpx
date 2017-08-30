@@ -47,8 +47,9 @@ handle_event({characters, Str}, _, #state{nest = [ele,trkpt,trkseg,trk,gpx]} = S
 
 handle_event({characters, Str}, _, #state{nest = [time,trkpt,trkseg,trk,gpx]} = State) ->
     io:format("Time string ~p~n", [Str]),
+    DateTime = string_to_datetime(Str),
     TrkPt = State#state.curr_trkpt,
-    NewPt = TrkPt#trkpt{time = Str},
+    NewPt = TrkPt#trkpt{time = DateTime},
     State#state{curr_trkpt = NewPt};
 
 handle_event({startElement, _, "trkpt" = LocalName, _, Attr},
@@ -104,4 +105,17 @@ attributes_to_lat_lon([{_,_,"lat",LatStr},{_,_,"lon",LonStr}|_]) ->
     {NumLon, []} = string:to_float(LonStr),
     {NumLat, NumLon}.
 
-%% End of Module.
+%% @doc Convert the date/time string of the form "2009-10-17T18:37:31Z" to a
+%% datetime().
+string_to_datetime(DateTimeStr) when is_list(DateTimeStr) ->
+    [DateStr, TimeStr] = string:tokens(DateTimeStr, "T"),
+    [YearStr, MonthStr, DayStr] = string:tokens(DateStr, "-"),
+    {Year, []} = string:to_integer(YearStr),
+    {Month, []} = string:to_integer(MonthStr),
+    {Day, []} = string:to_integer(DayStr),
+    [HourStr, MinStr, SecStr] = string:tokens(TimeStr, ":"),
+    {Hour, []} = string:to_integer(HourStr),
+    {Min, []} = string:to_integer(MinStr),
+    {Sec, _} = string:to_integer(SecStr),   % Discards trailing Z.
+    {{Year,Month,Day},{Hour,Min,Sec}}.
+
