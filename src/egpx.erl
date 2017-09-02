@@ -15,6 +15,12 @@
 %-record(state, {gpx, nest}).
 -record(state, {trackpoints, curr_trkpt, nest}).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Type specifications.
+
+-opaque trackpoint() :: #trkpt{}.
+-export_type([trackpoint/0]).
+
 %% Define a type that is similar to datetime(), but allows fractional seconds.
 -type datetime_frac() :: {{integer(),integer(),integer()}, 
                           {integer(),integer(),number()}}.
@@ -99,6 +105,9 @@ reduce_nest(#state{nest = Nest} = State, LocalName) ->
 
 
 %% @doc Find the trackpoint that is closest to the specified time.
+-spec find_closest_trackpoint_time(
+        [trackpoint()], datetime_ms()) -> trackpoint().
+
 find_closest_trackpoint_time([], _) ->
     {error};
 find_closest_trackpoint_time(
