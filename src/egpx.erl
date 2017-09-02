@@ -2,8 +2,7 @@
 
 %% egpx: egpx library's entry point.
 
--export([read_file/1, event_func/3]).
-
+-export([read_file/1, event_func/3, find_closest_trackpoint_time/2]).
 
 -record(gpx, {metadata, trks}).
 
@@ -15,6 +14,15 @@
 
 %-record(state, {gpx, nest}).
 -record(state, {trackpoints, curr_trkpt, nest}).
+
+%% Define a type that is similar to datetime(), but allows fractional seconds.
+-type datetime_frac() :: {{integer(),integer(),integer()}, 
+                          {integer(),integer(),number()}}.
+
+%% Define a type that is similar to datetime(), but contains a ms field for 
+%% greater precision.
+-type datetime_ms() ::  {{integer(),integer(),integer()}, 
+                         {integer(),integer(),integer(), integer()}}.
 
 %% API
 
@@ -47,7 +55,7 @@ handle_event({characters, Str}, _, #state{nest = [ele,trkpt,trkseg,trk,gpx]} = S
 
 handle_event({characters, Str}, _, #state{nest = [time,trkpt,trkseg,trk,gpx]} = State) ->
     %io:format("Time string ~p~n", [Str]),
-    DateTime = string_to_datetime(Str),
+    DateTime = string_to_datetime_frac(Str),
     TrkPt = State#state.curr_trkpt,
     NewPt = TrkPt#trkpt{time = DateTime},
     State#state{curr_trkpt = NewPt};
@@ -89,6 +97,74 @@ reduce_nest(#state{nest = Nest} = State, LocalName) ->
     [Tag|NewNest] = Nest,
     State#state{nest = NewNest}.
 
+
+%% @doc Find the trackpoint that is closest to the specified time.
+find_closest_trackpoint_time([], _) ->
+    {error};
+find_closest_trackpoint_time(
+    [FirstTP|RemTP] = Trackpoints, 
+    {{_Year,_Month,_Day},{_Hour,_Min,_Sec,_Ms}} = DateTimeMS) 
+    when is_list(Trackpoints) ->
+        find_time(FirstTP, RemTP, DateTimeMS).
+ 
+find_time(PrevTP, [], _DateTimeMS) ->
+    {ok, PrevTP};
+find_time(PrevTP, [NextTP|Rem], DateTimeMS) ->
+    PrevMS = datetime_frac_to_gregorian_ms(get_time(PrevTP)),
+    NextMS = datetime_frac_to_gregorian_ms(get_time(NextTP)),
+    SearchMS = datetime_ms_to_gregorian_ms(DateTimeMS),
+    case PrevMS >= SearchMS of
+        true ->
+            {ok, PrevTP};
+        false ->
+            case NextMS >= SearchMS of
+                true ->
+                    % Point of interest lies in the interval.
+                    get_closest(PrevTP, NextTP, DateTimeMS);
+                false ->
+                    % Haven't reached the point yet, recurse. 
+                    find_time(NextTP, Rem, DateTimeMS)
+            end
+    end.  
+
+%% Select which of the two trackpoints are closest to the specified time.
+get_closest(TP1, TP2, DateTimeMS) ->
+    RefGregMS = datetime_ms_to_gregorian_ms(DateTimeMS),
+    DateTime1 = get_time(TP1),
+    DateTime2 = get_time(TP2),
+    GregMS1 = datetime_frac_to_gregorian_ms(DateTime1),
+    GregMS2 = datetime_frac_to_gregorian_ms(DateTime2),
+    Delta1 = GregMS1 - RefGregMS,
+    Delta2 = GregMS2 - RefGregMS,
+    case abs(Delta1) =< abs(Delta2) of
+        true  -> TP1;
+        false -> TP2
+    end.
+
+%% @doc Convert a datetime_frac() to a datetime_ms().
+-spec datetime_frac_to_datetime_ms(datetime_frac()) -> datetime_ms(). 
+datetime_frac_to_datetime_ms({Date,{H,M,FS}}) ->
+    Sec = trunc(FS),
+    Rem = FS - Sec,
+    MS = round(Rem * 1000),
+    {Date,{H,M,Sec,MS}}.
+
+%% Convert datetime_ms() to datetime(). Drops the MS field.
+datetime_ms_to_datetime({Date, {H,M,S,_MS}}) ->
+    {Date,{H,M,S}}.
+
+%% Convert datetime() to Gregorian MS.
+datetime_frac_to_gregorian_ms(DateTimeFrac) ->
+    DateTimeMS = datetime_frac_to_datetime_ms(DateTimeFrac),
+    datetime_ms_to_gregorian_ms(DateTimeMS).
+
+%% Convert datetime_ms() to Gregorian MS.
+datetime_ms_to_gregorian_ms({_Date,{_,_,_,MS}} = DateTimeMS) ->
+    DateTime = datetime_ms_to_datetime(DateTimeMS),
+    GregSec = calendar:datetime_to_gregorian_seconds(DateTime),
+    GregMS = 1000 * GregSec + MS,
+    GregMS.
+
 %% @doc Map tags to atoms.
 tag_to_atom("gpx")        -> gpx;
 tag_to_atom("trk")        -> trk;
@@ -106,8 +182,8 @@ attributes_to_lat_lon([{_,_,"lat",LatStr},{_,_,"lon",LonStr}|_]) ->
     {NumLat, NumLon}.
 
 %% @doc Convert the date/time string of the form "2009-10-17T18:37:31Z" to a
-%% datetime().
-string_to_datetime(DateTimeStr) when is_list(DateTimeStr) ->
+%% datetime_frac().
+string_to_datetime_frac(DateTimeStr) when is_list(DateTimeStr) ->
     [DateStr, TimeStr] = string:tokens(DateTimeStr, "T"),
     [YearStr, MonthStr, DayStr] = string:tokens(DateStr, "-"),
     {Year, []} = string:to_integer(YearStr),
@@ -128,3 +204,7 @@ string_to_number(NumStr) ->
         {X, _}            -> 
             X
     end.
+
+%% @doc Accessor functions.
+
+get_time(#trkpt{time = X}) -> X.
