@@ -164,7 +164,8 @@ datetime_frac_to_datetime_ms({Date,{H,M,FS}}) ->
     MS = round(Rem * 1000),
     {Date,{H,M,Sec,MS}}.
 
-%% Convert datetime_ms() to datetime(). Drops the MS field.
+%% @doc Convert datetime_ms() to datetime(). Drops the MS field.
+-spec datetime_ms_to_datetime(datetime_ms()) -> calendar:datetime().
 datetime_ms_to_datetime({Date, {H,M,S,_MS}}) ->
     {Date,{H,M,S}}.
 
@@ -181,6 +182,7 @@ datetime_ms_to_gregorian_ms({_Date,{_,_,_,MS}} = DateTimeMS) ->
     GregMS.
 
 %% @doc Map tags to atoms.
+-spec tag_to_atom(string()) -> atom().
 tag_to_atom("gpx")        -> gpx;
 tag_to_atom("trk")        -> trk;
 tag_to_atom("name")       -> name;
