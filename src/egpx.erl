@@ -115,7 +115,10 @@ find_closest_trackpoint_time(
     {{_Year,_Month,_Day},{_Hour,_Min,_Sec,_Ms}} = DateTimeMS) 
     when is_list(Trackpoints) ->
         find_time(FirstTP, RemTP, DateTimeMS).
- 
+
+%% @doc Helper function to scan a list of trackpoints for the closest match.
+-spec find_time(trackpoint(), [trackpoint()], datetime_ms()) -> trackpoint().
+
 find_time(PrevTP, [], _DateTimeMS) ->
     {ok, PrevTP};
 find_time(PrevTP, [NextTP|Rem], DateTimeMS) ->
@@ -136,7 +139,9 @@ find_time(PrevTP, [NextTP|Rem], DateTimeMS) ->
             end
     end.  
 
-%% Select which of the two trackpoints are closest to the specified time.
+%% @doc Select which of the two trackpoints are closest to the specified time.
+-spec get_closest(trackpoint(), trackpoint(), datetime_ms()) -> trackpoint().
+
 get_closest(TP1, TP2, DateTimeMS) ->
     RefGregMS = datetime_ms_to_gregorian_ms(DateTimeMS),
     DateTime1 = get_time(TP1),
@@ -152,6 +157,7 @@ get_closest(TP1, TP2, DateTimeMS) ->
 
 %% @doc Convert a datetime_frac() to a datetime_ms().
 -spec datetime_frac_to_datetime_ms(datetime_frac()) -> datetime_ms(). 
+
 datetime_frac_to_datetime_ms({Date,{H,M,FS}}) ->
     Sec = trunc(FS),
     Rem = FS - Sec,
