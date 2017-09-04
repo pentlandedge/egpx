@@ -4,12 +4,19 @@
 
 -export([
     read_file/1, 
+    read_bin/1, 
     event_func/3, 
     find_closest_trackpoint_time/2, 
     merge_trackpoints/1]).
 
 %% Export for accessor functions.
--export([get_tracks/1, get_trackpoints/1, get_time/1]).
+-export([
+    get_tracks/1, 
+    get_trackpoints/1, 
+    get_lat/1,
+    get_lon/1,
+    get_elev/1,
+    get_time/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions for building a structured representation of the 
@@ -62,6 +69,23 @@ read_file(GpxFile) ->
 
     Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
     case xmerl_sax_parser:file(GpxFile, Options) of 
+        {ok, #state{gpx = Gpx}, _RestBin} ->
+            {ok, Gpx};
+        Error -> 
+            {error, Error}
+    end.
+
+%% @doc Use the built in SAX parser to scan the UTF8 encoded binary.
+read_bin(GpxBin) ->
+    InitState = #state{
+        gpx = #gpx{trks = []},
+        curr_trk = #trk{trksegs = []},
+        trkpts = [], 
+        curr_trkpt = #trkpt{}, 
+        nest = []},
+
+    Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
+    case xmerl_sax_parser:stream(GpxBin, Options) of 
         {ok, #state{gpx = Gpx}, _RestBin} ->
             {ok, Gpx};
         Error -> 
@@ -288,5 +312,8 @@ merge_trackpoints(SegList) when is_list(SegList) ->
 get_tracks(#gpx{trks = X}) -> X.
 get_segs(#trk{trksegs = X}) -> X.
 get_trackpoints(#trkseg{trkpts = X}) -> X.
+get_lat(#trkpt{lat = X}) -> X.
+get_lon(#trkpt{lon = X}) -> X.
+get_elev(#trkpt{elev = X}) -> X.
 get_time(#trkpt{time = X}) -> X.
 
