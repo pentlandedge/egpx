@@ -119,7 +119,6 @@ handle_event({endElement, _, "trk", _}, _, State) ->
 handle_event({endElement, _, "gpx", _}, _, State) ->
     #state{gpx = Gpx} = State,
     Trks = Gpx#gpx.trks,
-    io:format("Trks: ~p~n", [Trks]),
     NewGpx = Gpx#gpx{trks = lists:reverse(Trks)}, 
     NewState = State#state{gpx = NewGpx},
     reduce_nest(NewState, "gpx");
