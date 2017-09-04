@@ -12,7 +12,10 @@ find_closest_checks() ->
     Time1 = egpx:get_time(TP1),    
     {ok, TP2} = egpx:find_closest_trackpoint_time(Trackpoints, {{2009,10,17},{18,37,30,0}}),
     Time2 = egpx:get_time(TP2),    
+    {ok, TP3} = egpx:find_closest_trackpoint_time(Trackpoints, {{2009,10,18},{18,37,25,500}}),
+    Time3 = egpx:get_time(TP3),    
     [?_assertEqual({{2009,10,17},{18,37,26}}, Time1),
-     ?_assertEqual({{2009,10,17},{18,37,31}}, Time2)
+     ?_assertEqual({{2009,10,17},{18,37,31}}, Time2),
+     ?_assertEqual({{2009,10,17},{18,37,34}}, Time3)
     ].
 
