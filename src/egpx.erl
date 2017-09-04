@@ -16,13 +16,13 @@
 -record(trkpt, {lat, lon, elev, time}).
 
 %-record(state, {gpx, nest}).
--record(state, {trackpoints, curr_trkpt, nest}).
+-record(state, {trksegs, trkpts, curr_trkpt, nest}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Type specifications.
 
--opaque trackpoint() :: #trkpt{}.
--export_type([trackpoint/0]).
+-opaque trkpt() :: #trkpt{}.
+-export_type([trkpt/0]).
 
 %% Define a type that is similar to datetime(), but allows fractional seconds.
 -type datetime_frac() :: {{integer(),integer(),integer()}, 
@@ -38,10 +38,10 @@
 %% @doc Use the built in SAX parser to scan the GPX file.
 read_file(GpxFile) ->
     %InitState = #state{gpx = #gpx{}, nest = []},
-    InitState = #state{trackpoints = [], curr_trkpt = #trkpt{}, nest = []},
+    InitState = #state{trksegs = [], trkpts = [], curr_trkpt = #trkpt{}, nest = []},
     Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
     case xmerl_sax_parser:file(GpxFile, Options) of 
-        {ok, #state{trackpoints = TrkPts}, _RestBin} ->
+        {ok, #state{trkpts = TrkPts}, _RestBin} ->
             {ok, lists:reverse(TrkPts)};
         Error -> 
             {error, Error}
@@ -82,10 +82,10 @@ handle_event({startElement, _, LocalName, _, _}, _, State) ->
     add_nest(State, LocalName);
 
 handle_event({endElement, _, "trkpt", _}, _, State) ->
-    #state{trackpoints = TkPts, curr_trkpt = TrkPt} = State,
+    #state{trkpts = TkPts, curr_trkpt = TrkPt} = State,
     %io:format("Finishing trackpoint~n"),
     NewTkPts = [TrkPt|TkPts],
-    NewState = State#state{trackpoints = NewTkPts, curr_trkpt = #trkpt{}},
+    NewState = State#state{trkpts = NewTkPts, curr_trkpt = #trkpt{}},
     reduce_nest(NewState, "trkpt");
 
 handle_event({endElement, _, LocalName, _}, _, State) ->
@@ -109,7 +109,7 @@ reduce_nest(#state{nest = Nest} = State, LocalName) ->
 
 %% @doc Find the trackpoint that is closest to the specified time.
 -spec find_closest_trackpoint_time(
-        [trackpoint()], datetime_ms()) -> {error} | {ok, trackpoint()}.
+        [trkpt()], datetime_ms()) -> {error} | {ok, trkpt()}.
 
 find_closest_trackpoint_time([], _) ->
     {error};
@@ -120,7 +120,7 @@ find_closest_trackpoint_time(
         find_time(FirstTP, RemTP, DateTimeMS).
 
 %% @doc Helper function to scan a list of trackpoints for the closest match.
--spec find_time(trackpoint(), [trackpoint()], datetime_ms()) -> trackpoint().
+-spec find_time(trkpt(), [trkpt()], datetime_ms()) -> trkpt().
 
 find_time(PrevTP, [], _DateTimeMS) ->
     {ok, PrevTP};
@@ -143,7 +143,7 @@ find_time(PrevTP, [NextTP|Rem], DateTimeMS) ->
     end.  
 
 %% @doc Select which of the two trackpoints are closest to the specified time.
--spec get_closest(trackpoint(), trackpoint(), datetime_ms()) -> trackpoint().
+-spec get_closest(trkpt(), trkpt(), datetime_ms()) -> trkpt().
 
 get_closest(TP1, TP2, DateTimeMS) ->
     RefGregMS = datetime_ms_to_gregorian_ms(DateTimeMS),
