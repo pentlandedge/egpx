@@ -109,7 +109,7 @@ reduce_nest(#state{nest = Nest} = State, LocalName) ->
 
 %% @doc Find the trackpoint that is closest to the specified time.
 -spec find_closest_trackpoint_time(
-        [trackpoint()], datetime_ms()) -> trackpoint().
+        [trackpoint()], datetime_ms()) -> {error} | {ok, trackpoint()}.
 
 find_closest_trackpoint_time([], _) ->
     {error};
@@ -135,7 +135,7 @@ find_time(PrevTP, [NextTP|Rem], DateTimeMS) ->
             case NextMS >= SearchMS of
                 true ->
                     % Point of interest lies in the interval.
-                    get_closest(PrevTP, NextTP, DateTimeMS);
+                    {ok, get_closest(PrevTP, NextTP, DateTimeMS)};
                 false ->
                     % Haven't reached the point yet, recurse. 
                     find_time(NextTP, Rem, DateTimeMS)

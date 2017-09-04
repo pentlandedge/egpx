@@ -10,5 +10,9 @@ find_closest_checks() ->
     {ok, Trackpoints} = egpx:read_file("../test/wiki.gpx"),
     {ok, TP1} = egpx:find_closest_trackpoint_time(Trackpoints, {{2009,10,17},{18,37,25,500}}),
     Time1 = egpx:get_time(TP1),    
-    [?_assertEqual({{2009,10,17},{18,37,26}}, Time1)].
+    {ok, TP2} = egpx:find_closest_trackpoint_time(Trackpoints, {{2009,10,17},{18,37,30,0}}),
+    Time2 = egpx:get_time(TP2),    
+    [?_assertEqual({{2009,10,17},{18,37,26}}, Time1),
+     ?_assertEqual({{2009,10,17},{18,37,31}}, Time2)
+    ].
 
