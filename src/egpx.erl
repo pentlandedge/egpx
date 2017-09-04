@@ -164,7 +164,7 @@ find_closest_trackpoint_time(
         find_time(FirstTP, RemTP, DateTimeMS).
 
 %% @doc Helper function to scan a list of trackpoints for the closest match.
--spec find_time(trkpt(), [trkpt()], datetime_ms()) -> trkpt().
+-spec find_time(trkpt(), [trkpt()], datetime_ms()) -> {ok, trkpt()}.
 
 find_time(PrevTP, [], _DateTimeMS) ->
     {ok, PrevTP};
