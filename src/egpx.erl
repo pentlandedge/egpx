@@ -2,10 +2,10 @@
 
 %% egpx: egpx library's entry point.
 
--export([read_file/1, event_func/3, find_closest_trackpoint_time/2]).
+-export([read_file/1, event_func/3, find_closest_trackpoint_time/2, merge_trackpoints/1]).
 
 %% Export for accessor functions.
--export([get_time/1]).
+-export([get_trackpoints/1, get_time/1]).
 
 -record(gpx, {metadata, trks}).
 
@@ -41,8 +41,8 @@ read_file(GpxFile) ->
     InitState = #state{trksegs = [], trkpts = [], curr_trkpt = #trkpt{}, nest = []},
     Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
     case xmerl_sax_parser:file(GpxFile, Options) of 
-        {ok, #state{trkpts = TrkPts}, _RestBin} ->
-            {ok, lists:reverse(TrkPts)};
+        {ok, #state{trksegs = TrkSegs}, _RestBin} ->
+            {ok, lists:reverse(TrkSegs)};
         Error -> 
             {error, Error}
     end.
@@ -82,11 +82,19 @@ handle_event({startElement, _, LocalName, _, _}, _, State) ->
     add_nest(State, LocalName);
 
 handle_event({endElement, _, "trkpt", _}, _, State) ->
-    #state{trkpts = TkPts, curr_trkpt = TrkPt} = State,
+    #state{trkpts = TrkPts, curr_trkpt = TrkPt} = State,
     %io:format("Finishing trackpoint~n"),
-    NewTkPts = [TrkPt|TkPts],
-    NewState = State#state{trkpts = NewTkPts, curr_trkpt = #trkpt{}},
+    NewTrkPts = [TrkPt|TrkPts],
+    NewState = State#state{trkpts = NewTrkPts, curr_trkpt = #trkpt{}},
     reduce_nest(NewState, "trkpt");
+
+handle_event({endElement, _, "trkseg", _}, _, State) ->
+    #state{trksegs = Segs, trkpts = TrkPts} = State,
+    NewSeg = #trkseg{trkpts = lists:reverse(TrkPts)},
+    NewSegs = [NewSeg|Segs],
+    NewTrkPts = [],
+    NewState = State#state{trksegs = NewSegs, trkpts = NewTrkPts},
+    reduce_nest(NewState, "trkseg");
 
 handle_event({endElement, _, LocalName, _}, _, State) ->
     reduce_nest(State, LocalName);
@@ -225,6 +233,12 @@ string_to_number(NumStr) ->
             X
     end.
 
-%% @doc Accessor functions.
+%% @doc Merge trackpoints from all segments into a single list.
+merge_trackpoints(SegList) when is_list(SegList) ->
+    NestedList = lists:map(fun get_trackpoints/1, SegList),
+    lists:flatten(NestedList).
 
+%% @doc Accessor functions.
+get_trackpoints(#trkseg{trkpts = X}) -> X.
 get_time(#trkpt{time = X}) -> X.
+

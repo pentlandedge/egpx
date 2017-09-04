@@ -7,7 +7,8 @@ egpx_test_() ->
     [find_closest_checks()].
 
 find_closest_checks() ->
-    {ok, Trackpoints} = egpx:read_file("../test/wiki.gpx"),
+    {ok, SegList} = egpx:read_file("../test/wiki.gpx"),
+    Trackpoints = egpx:merge_trackpoints(SegList),
     % Check an empty list of trackpoints produces an error.
     {error} = egpx:find_closest_trackpoint_time([], {{2009,10,17},{18,37,25,500}}),
     % Seach before start of trackpoint list.
