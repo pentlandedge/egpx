@@ -28,6 +28,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Type specifications.
 
+-opaque gpx() :: #gpx{}.
+-export_type([gpx/0]).
+
+-opaque trk() :: #trk{}.
+-export_type([trk/0]).
+
+-opaque trkseg() :: #trkseg{}.
+-export_type([trkseg/0]).
+
 -opaque trkpt() :: #trkpt{}.
 -export_type([trkpt/0]).
 
