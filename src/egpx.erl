@@ -9,7 +9,7 @@
     merge_trackpoints/1]).
 
 %% Export for accessor functions.
--export([get_trackpoints/1, get_time/1]).
+-export([get_tracks/1, get_trackpoints/1, get_time/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions for building a structured representation of the 
@@ -23,7 +23,7 @@
 
 -record(trkpt, {lat, lon, elev, time}).
 
--record(state, {trksegs, trkpts, curr_trkpt, nest}).
+-record(state, {gpx, curr_trk, trkpts, curr_trkpt, nest}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Type specifications.
@@ -44,12 +44,17 @@
 
 %% @doc Use the built in SAX parser to scan the GPX file.
 read_file(GpxFile) ->
-    %InitState = #state{gpx = #gpx{}, nest = []},
-    InitState = #state{trksegs = [], trkpts = [], curr_trkpt = #trkpt{}, nest = []},
+    InitState = #state{
+        gpx = #gpx{trks = []},
+        curr_trk = #trk{trksegs = []},
+        trkpts = [], 
+        curr_trkpt = #trkpt{}, 
+        nest = []},
+
     Options = [{event_fun, fun event_func/3}, {event_state, InitState}],
     case xmerl_sax_parser:file(GpxFile, Options) of 
-        {ok, #state{trksegs = TrkSegs}, _RestBin} ->
-            {ok, lists:reverse(TrkSegs)};
+        {ok, #state{gpx = Gpx}, _RestBin} ->
+            {ok, Gpx};
         Error -> 
             {error, Error}
     end.
@@ -96,12 +101,28 @@ handle_event({endElement, _, "trkpt", _}, _, State) ->
     reduce_nest(NewState, "trkpt");
 
 handle_event({endElement, _, "trkseg", _}, _, State) ->
-    #state{trksegs = Segs, trkpts = TrkPts} = State,
+    #state{curr_trk = Trk, trkpts = TrkPts} = State,
     NewSeg = #trkseg{trkpts = lists:reverse(TrkPts)},
-    NewSegs = [NewSeg|Segs],
     NewTrkPts = [],
-    NewState = State#state{trksegs = NewSegs, trkpts = NewTrkPts},
+    TrkSegs = Trk#trk.trksegs,
+    NewTrk = Trk#trk{trksegs = [NewSeg|TrkSegs]},
+    NewState = State#state{curr_trk = NewTrk, trkpts = NewTrkPts},
     reduce_nest(NewState, "trkseg");
+
+handle_event({endElement, _, "trk", _}, _, State) ->
+    #state{gpx = Gpx, curr_trk = Trk} = State,
+    Trks = Gpx#gpx.trks,
+    NewGpx = Gpx#gpx{trks = [Trk|Trks]}, 
+    NewState = State#state{gpx = NewGpx, curr_trk = #trk{}},
+    reduce_nest(NewState, "trk");
+
+handle_event({endElement, _, "gpx", _}, _, State) ->
+    #state{gpx = Gpx} = State,
+    Trks = Gpx#gpx.trks,
+    io:format("Trks: ~p~n", [Trks]),
+    NewGpx = Gpx#gpx{trks = lists:reverse(Trks)}, 
+    NewState = State#state{gpx = NewGpx},
+    reduce_nest(NewState, "gpx");
 
 handle_event({endElement, _, LocalName, _}, _, State) ->
     reduce_nest(State, LocalName);
@@ -241,11 +262,23 @@ string_to_number(NumStr) ->
     end.
 
 %% @doc Merge trackpoints from all segments into a single list.
+merge_trackpoints(#gpx{trks = Trks}) -> 
+    % Decompose into individual tracks and merge the trackpoints for each
+    % list of segments. Flatten the result.
+    F = fun(Trk) ->
+            Segs = get_segs(Trk),
+            merge_trackpoints(Segs)
+        end,
+    NestedList = lists:map(F, Trks),
+    lists:flatten(NestedList);
+    
 merge_trackpoints(SegList) when is_list(SegList) ->
     NestedList = lists:map(fun get_trackpoints/1, SegList),
     lists:flatten(NestedList).
 
 %% @doc Accessor functions.
+get_tracks(#gpx{trks = X}) -> X.
+get_segs(#trk{trksegs = X}) -> X.
 get_trackpoints(#trkseg{trkpts = X}) -> X.
 get_time(#trkpt{time = X}) -> X.
 
