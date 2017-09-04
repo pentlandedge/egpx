@@ -2,10 +2,18 @@
 
 %% egpx: egpx library's entry point.
 
--export([read_file/1, event_func/3, find_closest_trackpoint_time/2, merge_trackpoints/1]).
+-export([
+    read_file/1, 
+    event_func/3, 
+    find_closest_trackpoint_time/2, 
+    merge_trackpoints/1]).
 
 %% Export for accessor functions.
 -export([get_trackpoints/1, get_time/1]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Record definitions for building a structured representation of the 
+%% GPX file.
 
 -record(gpx, {metadata, trks}).
 
@@ -15,7 +23,6 @@
 
 -record(trkpt, {lat, lon, elev, time}).
 
-%-record(state, {gpx, nest}).
 -record(state, {trksegs, trkpts, curr_trkpt, nest}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
