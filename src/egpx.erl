@@ -4,6 +4,9 @@
 
 -export([read_file/1, event_func/3, find_closest_trackpoint_time/2]).
 
+%% Export for accessor functions.
+-export([get_time/1]).
+
 -record(gpx, {metadata, trks}).
 
 -record(trk, {name, trksegs}).
