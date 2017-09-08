@@ -7,7 +7,8 @@
     read_bin/1, 
     event_func/3, 
     find_closest_trackpoint_time/2, 
-    merge_trackpoints/1]).
+    merge_trackpoints/1,
+    trackpoints_to_csv_iolist/1]).
 
 %% Export for accessor functions.
 -export([
@@ -307,6 +308,29 @@ merge_trackpoints(#gpx{trks = Trks}) ->
 merge_trackpoints(SegList) when is_list(SegList) ->
     NestedList = lists:map(fun get_trackpoints/1, SegList),
     lists:flatten(NestedList).
+
+%% @doc Write a flat list of trackpoints to an iolist in CSV format.
+trackpoints_to_csv_iolist(Trackpoints) ->
+    lists:map(fun trackpoint_to_csv_iolist/1, Trackpoints).
+
+%% @doc Convert a single trackpoint to a CSV formatted iolist().
+trackpoint_to_csv_iolist(Trackpoint) ->
+    {Date,TimeFrac} = get_time(Trackpoint),
+    DateIO = date_to_iolist(Date),
+    TimeIO = time_frac_to_iolist(TimeFrac),
+    Args = [get_lat(Trackpoint),
+            get_lon(Trackpoint),
+            get_elev(Trackpoint)],
+    RemIO = io_lib:format(",~p,~p,~p~n", Args),
+    [DateIO, TimeIO, RemIO].
+
+%% @doc Convert a date tuple into a display string.
+date_to_iolist({Yr,Mon,Day}) ->
+    io_lib:format("~p-~p-~p", [Yr, Mon, Day]).
+
+%% @doc Convert a fractional time to a string.
+time_frac_to_iolist({Hr,Min,Sec}) ->
+    io_lib:format("~2..0w:~2..0w:~6.3.0f", [Hr, Min, Sec]).
 
 %% @doc Accessor functions.
 get_tracks(#gpx{trks = X}) -> X.
