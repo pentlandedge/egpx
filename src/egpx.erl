@@ -321,6 +321,8 @@ trackpoints_to_csv_iolist(Trackpoints) ->
     IoList.
 
 %% @doc Convert a single trackpoint to a CSV formatted iolist().
+%% Need to add header row in the form:
+%% Record Number,Date,Time,Latitude,Longitude,Speed(km/h),Altitude(meters)
 trackpoint_to_csv_iolist(RecNum, Trackpoint) ->
     RecNumStr = io_lib:format("~p,", [RecNum]),
     {Date,TimeFrac} = get_time(Trackpoint),
