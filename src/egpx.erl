@@ -311,10 +311,18 @@ merge_trackpoints(SegList) when is_list(SegList) ->
 
 %% @doc Write a flat list of trackpoints to an iolist in CSV format.
 trackpoints_to_csv_iolist(Trackpoints) ->
-    lists:map(fun trackpoint_to_csv_iolist/1, Trackpoints).
+    % Define a local function to increment a record number as the accumulator
+    % in a mapfold.
+    F = fun(Trackpoint, RecNum) ->
+            IoList = trackpoint_to_csv_iolist(RecNum, Trackpoint), 
+            {IoList, RecNum+1}
+        end,
+    {IoList, _} = lists:mapfoldl(F, 1, Trackpoints),
+    IoList.
 
 %% @doc Convert a single trackpoint to a CSV formatted iolist().
-trackpoint_to_csv_iolist(Trackpoint) ->
+trackpoint_to_csv_iolist(RecNum, Trackpoint) ->
+    RecNumStr = io_lib:format("~p,", [RecNum]),
     {Date,TimeFrac} = get_time(Trackpoint),
     DateIO = date_to_iolist(Date),
     TimeIO = time_frac_to_iolist(TimeFrac),
@@ -322,7 +330,7 @@ trackpoint_to_csv_iolist(Trackpoint) ->
             get_lon(Trackpoint),
             get_elev(Trackpoint)],
     RemIO = io_lib:format(",~p,~p,~p~n", Args),
-    [DateIO, TimeIO, RemIO].
+    [RecNumStr, DateIO, ",", TimeIO, RemIO].
 
 %% @doc Convert a date tuple into a display string.
 date_to_iolist({Yr,Mon,Day}) ->
