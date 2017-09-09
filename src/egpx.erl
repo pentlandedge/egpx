@@ -327,7 +327,7 @@ trackpoint_to_csv_iolist(RecNum, Trackpoint) ->
     RecNumStr = io_lib:format("~p,", [RecNum]),
     {Date,TimeFrac} = get_time(Trackpoint),
     DateIO = date_to_iolist(Date),
-    TimeIO = time_frac_to_iolist(TimeFrac),
+    TimeIO = time_to_iolist(TimeFrac),
     Args = [get_lat(Trackpoint),
             get_lon(Trackpoint),
             get_elev(Trackpoint)],
@@ -338,9 +338,11 @@ trackpoint_to_csv_iolist(RecNum, Trackpoint) ->
 date_to_iolist({Yr,Mon,Day}) ->
     io_lib:format("~p-~p-~p", [Yr, Mon, Day]).
 
-%% @doc Convert a fractional time to a string.
-time_frac_to_iolist({Hr,Min,Sec}) ->
-    io_lib:format("~2..0w:~2..0w:~6.3.0f", [Hr, Min, Sec]).
+%% @doc Convert a time to a string.
+time_to_iolist({Hr,Min,Sec}) when is_float(Sec) ->
+    io_lib:format("~2..0w:~2..0w:~6.3.0f", [Hr, Min, Sec]);
+time_to_iolist({Hr,Min,Sec}) ->
+    io_lib:format("~2..0w:~2..0w:~2..0w", [Hr, Min, Sec]).
 
 %% @doc Accessor functions.
 get_tracks(#gpx{trks = X}) -> X.

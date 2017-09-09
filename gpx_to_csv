@@ -1,0 +1,20 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable -sname gpx_to_csv -pa ebin -mnesia debug verbose
+main([InFile, OutFile]) ->
+    try
+        {ok, Gpx} = egpx:read_file(InFile),
+        Trackpoints = egpx:merge_trackpoints(Gpx),
+        IO = egpx:trackpoints_to_csv_iolist(Trackpoints),
+        ok = file:write_file(OutFile, IO)
+    catch
+        _:_ ->
+            usage()
+    end;
+main(_) ->
+    usage().
+
+usage() ->
+    io:format("usage: gpx_to_csv in_file out_file~n"),
+    halt(1).
+
