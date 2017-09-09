@@ -3,10 +3,19 @@
 %%! -smp enable -sname gpx_to_csv -pa ebin -mnesia debug verbose
 main([InFile, OutFile]) ->
     try
-        {ok, Gpx} = egpx:read_file(InFile),
-        Trackpoints = egpx:merge_trackpoints(Gpx),
-        IO = egpx:trackpoints_to_csv_iolist(Trackpoints),
-        ok = file:write_file(OutFile, IO)
+        case egpx:read_file(InFile) of
+            {ok, Gpx} -> 
+                Trackpoints = egpx:merge_trackpoints(Gpx),
+                IO = egpx:trackpoints_to_csv_iolist(Trackpoints),
+                case file:read_file_info(OutFile) of
+                    {error, enoent} ->
+                        ok = file:write_file(OutFile, IO);
+                    _ ->
+                        io:format("File ~p already exists, won't overwrite~n", [OutFile])
+                end;
+            _ ->
+                io:format("Error reading file ~p~n", [InFile])
+        end
     catch
         _:_ ->
             usage()
