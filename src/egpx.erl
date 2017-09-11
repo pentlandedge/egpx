@@ -17,7 +17,8 @@
     get_lat/1,
     get_lon/1,
     get_elev/1,
-    get_time/1]).
+    get_time/1,
+    get_hdop/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions for building a structured representation of the 
@@ -29,7 +30,7 @@
 
 -record(trkseg, {trkpts}).
 
--record(trkpt, {lat, lon, elev, time, speed}).
+-record(trkpt, {lat, lon, elev, time, hdop, speed}).
 
 -record(state, {gpx, curr_trk, trkpts, curr_trkpt, nest}).
 
@@ -111,6 +112,12 @@ handle_event({characters, Str}, _, #state{nest = [time,trkpt,trkseg,trk,gpx]} = 
     DateTime = string_to_datetime_frac(Str),
     TrkPt = State#state.curr_trkpt,
     NewPt = TrkPt#trkpt{time = DateTime},
+    State#state{curr_trkpt = NewPt};
+
+handle_event({characters, Str}, _, #state{nest = [hdop,trkpt,trkseg,trk,gpx]} = State) ->
+    Hdop = string_to_number(Str),
+    TrkPt = State#state.curr_trkpt,
+    NewPt = TrkPt#trkpt{hdop = Hdop},
     State#state{curr_trkpt = NewPt};
 
 % Bad Elf speed extension to trackpoints.
@@ -267,6 +274,7 @@ tag_to_atom("trkseg")           -> trkseg;
 tag_to_atom("trkpt")            -> trkpt;
 tag_to_atom("ele")              -> ele;
 tag_to_atom("time")             -> time;
+tag_to_atom("hdop")             -> hdop;
 tag_to_atom("extensions")       -> extensions;
 tag_to_atom("speed")            -> speed;
 tag_to_atom(_)                  -> undefined.
@@ -372,5 +380,6 @@ get_lat(#trkpt{lat = X}) -> X.
 get_lon(#trkpt{lon = X}) -> X.
 get_elev(#trkpt{elev = X}) -> X.
 get_time(#trkpt{time = X}) -> X.
+get_hdop(#trkpt{hdop = X}) -> X.
 get_speed(#trkpt{speed = X}) -> X.
 
