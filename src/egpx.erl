@@ -325,7 +325,8 @@ trackpoints_to_csv_iolist(Trackpoints) ->
             {IoList, RecNum+1}
         end,
     {IoList, _} = lists:mapfoldl(F, 1, Trackpoints),
-    IoList.
+    ColHdr = col_hdr_iolist(),
+    [ColHdr|IoList].
 
 %% @doc Convert a single trackpoint to a CSV formatted iolist().
 %% Need to add header row in the form:
@@ -335,11 +336,19 @@ trackpoint_to_csv_iolist(RecNum, Trackpoint) ->
     {Date,TimeFrac} = get_time(Trackpoint),
     DateIO = date_to_iolist(Date),
     TimeIO = time_to_iolist(TimeFrac),
+    SpeedIO = speed_to_iolist(get_speed(Trackpoint)),
     Args = [get_lat(Trackpoint),
             get_lon(Trackpoint),
             get_elev(Trackpoint)],
-    RemIO = io_lib:format(",~p,~p,~p~n", Args),
-    [RecNumStr, DateIO, ",", TimeIO, RemIO].
+    ArgsIO = io_lib:format(",~p,~p,~p,", Args),
+    NL = io_lib:format("~n", []),
+    [RecNumStr, DateIO, ",", TimeIO, ArgsIO, SpeedIO, NL].
+
+%% @doc Return a column of header strings as an iolist().
+col_hdr_iolist() ->
+    Hdr = "Record Number,Date,Time,Latitude,Longitude,Altitude(m msl),"
+          "Speed(m/s)~n",
+    io_lib:format(Hdr, []).
 
 %% @doc Convert a date tuple into a display string.
 date_to_iolist({Yr,Mon,Day}) ->
@@ -351,6 +360,10 @@ time_to_iolist({Hr,Min,Sec}) when is_float(Sec) ->
 time_to_iolist({Hr,Min,Sec}) ->
     io_lib:format("~2..0w:~2..0w:~2..0w", [Hr, Min, Sec]).
 
+%% @doc Convert a speed to a string. If undefined, map to empty.
+speed_to_iolist(undefined) -> [];
+speed_to_iolist(Speed)     -> io_lib:format("~p", [Speed]).
+
 %% @doc Accessor functions.
 get_tracks(#gpx{trks = X}) -> X.
 get_segs(#trk{trksegs = X}) -> X.
@@ -359,4 +372,5 @@ get_lat(#trkpt{lat = X}) -> X.
 get_lon(#trkpt{lon = X}) -> X.
 get_elev(#trkpt{elev = X}) -> X.
 get_time(#trkpt{time = X}) -> X.
+get_speed(#trkpt{speed = X}) -> X.
 
