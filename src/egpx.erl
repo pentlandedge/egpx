@@ -18,7 +18,8 @@
     get_lon/1,
     get_elev/1,
     get_time/1,
-    get_hdop/1]).
+    get_hdop/1,
+    get_speed/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions for building a structured representation of the 
