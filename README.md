@@ -5,6 +5,7 @@ It's primary purpose is to support tracking applications, and it should be capab
 
 From initial testing, it appears to cope with most standard elements, but many vendor extensions are ignored.
 
+The software has been released under an Apache free software license.
 ## Building
 It is necessary to have Erlang installed, and the compiler erlc available on the path. The rebar tool is used to control the build process, so it is also necessary to have a copy of rebar available on the path. The software can be built (on a Linux platform) using rebar:
 ```
