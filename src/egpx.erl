@@ -301,6 +301,10 @@ tag_to_atom(_)                  -> undefined.
 attributes_to_lat_lon([{_,_,"lat",LatStr},{_,_,"lon",LonStr}|_]) ->
     {NumLat, []} = string:to_float(LatStr),
     {NumLon, []} = string:to_float(LonStr),
+    {NumLat, NumLon};
+attributes_to_lat_lon([{_,_,"lon",LonStr},{_,_,"lat",LatStr}|_]) ->
+    {NumLat, []} = string:to_float(LatStr),
+    {NumLon, []} = string:to_float(LonStr),
     {NumLat, NumLon}.
 
 %% @doc Convert the date/time string of the form "2009-10-17T18:37:31Z" to a
