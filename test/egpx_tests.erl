@@ -21,7 +21,7 @@
 
 %% Define a test generator for the BCS character set functions.
 egpx_test_() ->
-    [find_closest_checks(), garmin_checks()].
+    [find_closest_checks(), garmin_checks(), garmin_run_checks()].
 
 find_closest_checks() ->
     {ok, Gpx} = egpx:read_file("../test/wiki.gpx"),
@@ -45,4 +45,7 @@ find_closest_checks() ->
 garmin_checks() ->
     {Ret, _Gpx} = egpx:read_file("../test/garmin_sample.gpx"),
     [?_assertEqual(ok, Ret)].
-    
+
+garmin_run_checks() ->
+    {Ret, _Gpx} = egpx:read_file("../test/garmin_run.gpx"),
+    [?_assertEqual(ok, Ret)].
