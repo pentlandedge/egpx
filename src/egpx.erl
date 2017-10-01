@@ -297,12 +297,15 @@ tag_to_atom("extensions")       -> extensions;
 tag_to_atom("speed")            -> speed;
 tag_to_atom(_)                  -> undefined.
 
-%% @doc Extract the Lat, Lon from attributes. Assumes fixed ordering at present.
+%% @doc Extract the Lat, Lon from attributes. 
 attributes_to_lat_lon([{_,_,"lat",LatStr},{_,_,"lon",LonStr}|_]) ->
-    {NumLat, []} = string:to_float(LatStr),
-    {NumLon, []} = string:to_float(LonStr),
-    {NumLat, NumLon};
+    lat_lon_strings_to_tuple(LatStr, LonStr);
 attributes_to_lat_lon([{_,_,"lon",LonStr},{_,_,"lat",LatStr}|_]) ->
+    lat_lon_strings_to_tuple(LatStr, LonStr).
+
+%% @doc Helper function to convert Lat, Lon strings to a tuple containing 
+%% the numerical values.
+lat_lon_strings_to_tuple(LatStr, LonStr) ->
     {NumLat, []} = string:to_float(LatStr),
     {NumLon, []} = string:to_float(LonStr),
     {NumLat, NumLon}.
