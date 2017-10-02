@@ -41,7 +41,7 @@ These can of course be combined into an Erlang fun and used with the standard hi
 ## Searching for the closest matching time.
 It is often useful to search the list of trackpoints for the closest matching time (specified as UTC). This is currently a simple linear search. This takes a list of trackpoints and a date/time similar to a standard datetime() element, but has an added element to permit millisecond precision {{Year,Month,Day},{Hour,Min,Sec,MilliSecs}}. For example, to search for the closest match in time to 20:56:23.153 on 1st October 2017:
 ```
-6> TP2 = egpx:find_closest_trackpoint_time(TrackPoints, {{2017,10,1},{20,56,23,153}}.
+6> TP2 = egpx:find_closest_trackpoint_time(TrackPoints, {{2017,10,1},{20,56,23,153}}).
 ```
 The efficency of this search will be improved soon.
 
