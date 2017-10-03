@@ -25,6 +25,8 @@ egpx_test_() ->
 
 find_closest_checks() ->
     {ok, Gpx} = egpx:read_file("../test/wiki.gpx"),
+    [Trk1|_] = egpx:get_tracks(Gpx),
+    Trk1Name = egpx:get_track_name(Trk1),
     Trackpoints = egpx:merge_trackpoints(Gpx),
     % Check an empty list of trackpoints produces an error.
     {error} = egpx:find_closest_trackpoint_time([], {{2009,10,17},{18,37,25,500}}),
@@ -39,7 +41,8 @@ find_closest_checks() ->
     Time3 = egpx:get_time(TP3),    
     [?_assertEqual({{2009,10,17},{18,37,26}}, Time1),
      ?_assertEqual({{2009,10,17},{18,37,31}}, Time2),
-     ?_assertEqual({{2009,10,17},{18,37,34}}, Time3)
+     ?_assertEqual({{2009,10,17},{18,37,34}}, Time3),
+     ?_assertEqual("Example GPX Document", Trk1Name)
     ].
 
 garmin_checks() ->
