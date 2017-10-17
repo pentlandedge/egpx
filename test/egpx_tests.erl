@@ -54,11 +54,23 @@ garmin_checks() ->
     [Pt1|_] = Trackpoints,
     [?_assertEqual(ok, Ret),
      ?_assertEqual("Run at  river side", Trk1Name),
-     ?_assert(almost_equal(25.06334876641631, egpx:get_lat(Pt1), 0.000001))].
+     ?_assert(almost_equal(25.06334876641631, egpx:get_lat(Pt1), 0.000001)),
+     ?_assert(almost_equal(121.6330941952765, egpx:get_lon(Pt1), 0.000001)),
+     ?_assert(almost_equal(19.799999237060547, egpx:get_elev(Pt1), 0.000001))
+     | time_checks({{2015,1,20},{13,26,30.0}}, egpx:get_time(Pt1))].
 
 garmin_run_checks() ->
     {Ret, _Gpx} = egpx:read_file("../test/garmin_run.gpx"),
     [?_assertEqual(ok, Ret)].
+
+%% Utility function to generate time checks
+time_checks({{Y1,M1,D1},{H1,Min1,S1}}, {{Y2,M2,D2},{H2,Min2,S2}}) ->
+    [?_assertEqual(Y1, Y2),
+     ?_assertEqual(M1, M2),
+     ?_assertEqual(D1, D2),
+     ?_assertEqual(H1, H2),
+     ?_assertEqual(Min1, Min2),
+     ?_assert(almost_equal(S1, S2, 0.000001))].
 
 %% Utility function to compare whether floating point values are within a 
 %% specified range.
