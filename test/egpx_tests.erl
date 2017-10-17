@@ -60,8 +60,17 @@ garmin_checks() ->
      | time_checks({{2015,1,20},{13,26,30.0}}, egpx:get_time(Pt1))].
 
 garmin_run_checks() ->
-    {Ret, _Gpx} = egpx:read_file("../test/garmin_run.gpx"),
-    [?_assertEqual(ok, Ret)].
+    {Ret, Gpx} = egpx:read_file("../test/garmin_run.gpx"),
+    [Trk1] = egpx:get_tracks(Gpx),
+    [Seg] = egpx:get_segs(Trk1),
+    Trackpoints = egpx:get_trackpoints(Seg),
+    [Pt1|_] = Trackpoints,
+    [?_assertEqual(ok, Ret),
+     ?_assertEqual("Untitled", egpx:get_track_name(Trk1)),
+     ?_assert(almost_equal(38.92747367732227, egpx:get_lat(Pt1), 0.000001)),
+     ?_assert(almost_equal(-77.02016168273985, egpx:get_lon(Pt1), 0.000001)),
+     ?_assert(almost_equal(25.600000381469727, egpx:get_elev(Pt1), 0.000001))
+     | time_checks({{2012,10,24},{23,29,40.0}}, egpx:get_time(Pt1))].
 
 %% Utility function to generate time checks
 time_checks({{Y1,M1,D1},{H1,Min1,S1}}, {{Y2,M2,D2},{H2,Min2,S2}}) ->
