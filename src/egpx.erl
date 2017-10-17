@@ -31,6 +31,7 @@
 -export([
     get_tracks/1, 
     get_track_name/1,
+    get_segs/1,
     get_trackpoints/1, 
     get_lat/1,
     get_lon/1,

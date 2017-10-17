@@ -49,9 +49,19 @@ garmin_checks() ->
     {Ret, Gpx} = egpx:read_file("../test/garmin_sample.gpx"),
     [Trk1] = egpx:get_tracks(Gpx),
     Trk1Name = egpx:get_track_name(Trk1),
+    [Seg] = egpx:get_segs(Trk1),
+    Trackpoints = egpx:get_trackpoints(Seg),
+    [Pt1|_] = Trackpoints,
     [?_assertEqual(ok, Ret),
-     ?_assertEqual("Run at  river side", Trk1Name)].
+     ?_assertEqual("Run at  river side", Trk1Name),
+     ?_assert(almost_equal(25.06334876641631, egpx:get_lat(Pt1), 0.000001))].
 
 garmin_run_checks() ->
     {Ret, _Gpx} = egpx:read_file("../test/garmin_run.gpx"),
     [?_assertEqual(ok, Ret)].
+
+%% Utility function to compare whether floating point values are within a 
+%% specified range.
+almost_equal(V1, V2, Delta) ->
+    abs(V1 - V2) =< Delta.
+
