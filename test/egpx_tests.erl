@@ -46,8 +46,11 @@ find_closest_checks() ->
     ].
 
 garmin_checks() ->
-    {Ret, _Gpx} = egpx:read_file("../test/garmin_sample.gpx"),
-    [?_assertEqual(ok, Ret)].
+    {Ret, Gpx} = egpx:read_file("../test/garmin_sample.gpx"),
+    [Trk1] = egpx:get_tracks(Gpx),
+    Trk1Name = egpx:get_track_name(Trk1),
+    [?_assertEqual(ok, Ret),
+     ?_assertEqual("Run at  river side", Trk1Name)].
 
 garmin_run_checks() ->
     {Ret, _Gpx} = egpx:read_file("../test/garmin_run.gpx"),
