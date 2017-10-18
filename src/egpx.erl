@@ -50,7 +50,7 @@
 
 -record(trkseg, {trkpts}).
 
--record(trkpt, {lat, lon, elev, time, hdop, speed}).
+-record(trkpt, {lat, lon, elev, time, hdop, speed, hr}).
 
 -record(state, {gpx, curr_trk, trkpts, curr_trkpt, nest}).
 
@@ -150,6 +150,13 @@ handle_event({characters, Str}, _, #state{nest = [speed,extensions,trkpt,trkseg,
     Speed = string_to_number(Str),
     TrkPt = State#state.curr_trkpt,
     NewPt = TrkPt#trkpt{speed = Speed},
+    State#state{curr_trkpt = NewPt};
+
+% Garmin TrackPointExtension containing a nested heart rate element.
+handle_event({characters, Str}, _, #state{nest = [hr,track_point_ext,extensions,trkpt,trkseg,trk,gpx]} = State) ->
+    HeartRate = string_to_number(Str),
+    TrkPt = State#state.curr_trkpt,
+    NewPt = TrkPt#trkpt{hr = HeartRate},
     State#state{curr_trkpt = NewPt};
 
 handle_event({startElement, _, "trkpt" = LocalName, _, Attr},
@@ -291,18 +298,20 @@ datetime_ms_to_gregorian_ms({_Date,{_,_,_,MS}} = DateTimeMS) ->
     GregMS.
 
 %% @doc Map tags to atoms.
--spec tag_to_atom(string())     -> atom().
-tag_to_atom("gpx")              -> gpx;
-tag_to_atom("trk")              -> trk;
-tag_to_atom("name")             -> name;
-tag_to_atom("trkseg")           -> trkseg;
-tag_to_atom("trkpt")            -> trkpt;
-tag_to_atom("ele")              -> ele;
-tag_to_atom("time")             -> time;
-tag_to_atom("hdop")             -> hdop;
-tag_to_atom("extensions")       -> extensions;
-tag_to_atom("speed")            -> speed;
-tag_to_atom(_)                  -> undefined.
+-spec tag_to_atom(string())         -> atom().
+tag_to_atom("gpx")                  -> gpx;
+tag_to_atom("trk")                  -> trk;
+tag_to_atom("name")                 -> name;
+tag_to_atom("trkseg")               -> trkseg;
+tag_to_atom("trkpt")                -> trkpt;
+tag_to_atom("ele")                  -> ele;
+tag_to_atom("time")                 -> time;
+tag_to_atom("hdop")                 -> hdop;
+tag_to_atom("extensions")           -> extensions;
+tag_to_atom("speed")                -> speed;
+tag_to_atom("TrackPointExtension")  -> track_point_ext;
+tag_to_atom("hr")                   -> hr;
+tag_to_atom(_)                      -> undefined.
 
 %% @doc Extract the Lat, Lon from attributes. 
 attributes_to_lat_lon([{_,_,"lat",LatStr},{_,_,"lon",LonStr}|_]) ->
