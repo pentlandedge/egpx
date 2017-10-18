@@ -21,7 +21,8 @@
 
 %% Define a test generator for the BCS character set functions.
 egpx_test_() ->
-    [find_closest_checks(), garmin_checks(), garmin_run_checks()].
+    [find_closest_checks(), garmin_checks(), garmin_run_checks(), 
+     garmin_extension_checks()].
 
 find_closest_checks() ->
     {ok, Gpx} = egpx:read_file("../test/wiki.gpx"),
@@ -71,6 +72,11 @@ garmin_run_checks() ->
      ?_assert(almost_equal(-77.02016168273985, egpx:get_lon(Pt1), 0.000001)),
      ?_assert(almost_equal(25.600000381469727, egpx:get_elev(Pt1), 0.000001))
      | time_checks({{2012,10,24},{23,29,40.0}}, egpx:get_time(Pt1))].
+
+garmin_extension_checks() ->
+    {ok, Gpx} = egpx:read_file("../test/garmin_run_reduced.gpx"),
+    [Trk1] = egpx:get_tracks(Gpx),
+    [?_assertEqual("Untitled", egpx:get_track_name(Trk1))].
 
 %% Utility function to generate time checks
 time_checks({{Y1,M1,D1},{H1,Min1,S1}}, {{Y2,M2,D2},{H2,Min2,S2}}) ->
