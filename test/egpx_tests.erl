@@ -76,7 +76,12 @@ garmin_run_checks() ->
 garmin_extension_checks() ->
     {ok, Gpx} = egpx:read_file("../test/garmin_run_reduced.gpx"),
     [Trk1] = egpx:get_tracks(Gpx),
-    [?_assertEqual("Untitled", egpx:get_track_name(Trk1))].
+    [Seg1] = egpx:get_segs(Trk1),
+    TrkPts = egpx:get_trackpoints(Seg1),
+    HeartRates = lists:map(fun egpx:get_hr/1, TrkPts),
+    ExpectedRates = [130, 134, 139, 144, 149, 161], 
+    [?_assertEqual("Untitled", egpx:get_track_name(Trk1)),
+     ?_assertEqual(ExpectedRates, HeartRates)].
 
 %% Utility function to generate time checks
 time_checks({{Y1,M1,D1},{H1,Min1,S1}}, {{Y2,M2,D2},{H2,Min2,S2}}) ->

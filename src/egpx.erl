@@ -38,7 +38,8 @@
     get_elev/1,
     get_time/1,
     get_hdop/1,
-    get_speed/1]).
+    get_speed/1,
+    get_hr/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Record definitions for building a structured representation of the 
@@ -424,4 +425,5 @@ get_elev(#trkpt{elev = X}) -> X.
 get_time(#trkpt{time = X}) -> X.
 get_hdop(#trkpt{hdop = X}) -> X.
 get_speed(#trkpt{speed = X}) -> X.
+get_hr(#trkpt{hr = X}) -> X.
 
