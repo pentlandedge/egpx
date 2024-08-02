@@ -129,7 +129,7 @@ handle_event({characters, Str}, _, #state{nest = [name,trk,gpx]} = State) ->
     State#state{curr_trk = NewTrk};
 
 handle_event({characters, Str}, _, #state{nest = [ele,trkpt,trkseg,trk,gpx]} = State) ->
-    {Elevation, []} = string:to_float(Str),
+    Elevation = string_to_number(Str),
     TrkPt = State#state.curr_trkpt,
     NewPt = TrkPt#trkpt{elev = Elevation},
     State#state{curr_trkpt = NewPt};
